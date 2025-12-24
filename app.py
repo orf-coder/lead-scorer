@@ -13,6 +13,18 @@ from lead_scorer import (
 )
 
 def parse_lead_from_text(text):
+    """
+    Parse lead information from a text string.
+
+    The text is expected to contain key-value pairs separated by colons, one per line.
+    Keys are normalized to lowercase with underscores replacing spaces.
+
+    Args:
+        text (str): The text containing lead information in key:value format.
+
+    Returns:
+        dict: A dictionary with parsed key-value pairs. Keys are normalized.
+    """
     lines = text.split('\n')
     data = {}
     for line in lines:
@@ -370,19 +382,15 @@ if st.session_state.scored:
         st.divider()
         st.subheader("🎯 Recommended Action")
         if final_label == 'Hot':
-            options = ["Assign to SDR", "Schedule Discovery Call", "Send Premium Email Template", "Other"]
+            options = ["Assign to SDR", "Schedule Discovery Call", "Send Premium Email Template"]
         elif final_label == 'Warm':
-            options = ["Send Follow-up Email", "Add to Nurture Campaign", "Offer Free Trial", "Other"]
+            options = ["Send Follow-up Email", "Add to Nurture Campaign", "Offer Free Trial"]
         else:  # Cold
-            options = ["Discard Lead", "Add to Cold List", "Monitor for Future Engagement", "Other"]
+            options = ["Discard Lead", "Add to Cold List", "Monitor for Future Engagement"]
 
-        selected_action = st.radio("Select action to take:", options, index=0, key="action_radio")
-        if selected_action == "Other":
-            other_action = st.text_input("Specify other action:", key="other_action")
-            final_action = other_action if other_action else "Other (not specified)"
-        else:
-            final_action = selected_action
-        st.info(f"Selected Action: **{final_action}**")
+        st.markdown("**Recommended Actions:**")
+        for option in options:
+            st.markdown(f"- {option}")
 
         # Export single result
         st.divider()
@@ -412,8 +420,16 @@ if st.session_state.scored:
                 logging.error("Failed to save lead to CSV")
 
     else:
-        st.warning("Error! No ML models found. Please run `python run_train_all.py` to train models.")
-        logging.warning("Scoring attempted but no ML models loaded")
+        # Attempt to trigger training automatically in the background
+        st.warning("No ML models found. Attempting to start training in background...")
+        logging.warning("No ML models found; launching training script run_train_all.py")
+        try:
+            # Start training in a background process so Streamlit stays responsive
+            subprocess.Popen(["python", "run_train_all.py"])
+            st.info("Training started in background. Refresh this app after training completes.")
+        except Exception as e:
+            st.error("Failed to start background training. Please run `python run_train_all.py` locally.")
+            logging.error(f"Failed to launch training: {e}")
 
 st.divider()
 st.markdown("""

@@ -1,3 +1,25 @@
+"""
+Models Module
+
+This module provides machine learning functionality for the Lead Scorer project.
+
+It includes the LeadClassifier class for training and predicting lead categories,
+as well as utility functions for model management, evaluation, and batch processing.
+
+Key Components:
+- LeadClassifier: Main class for text classification models
+- Model training and persistence functions
+- Evaluation and comparison utilities
+- Text preprocessing with lemmatization
+
+Supported Models:
+- Logistic Regression
+- Support Vector Machine (SVM)
+- Naive Bayes
+- Ensemble (Voting Classifier)
+
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -34,6 +56,15 @@ lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
 def lemmatize_text(text):
+    """
+    Preprocess text by lemmatizing words and removing stop words.
+
+    Args:
+        text (str): Input text to preprocess.
+
+    Returns:
+        str: Processed text with lemmatized words and stop words removed.
+    """
     words = re.findall(r'\b\w+\b', text.lower())
     words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
     return ' '.join(words)
@@ -314,7 +345,19 @@ def train_and_save_models(csv_path="Data/csvfile.csv", output_prefix="lead_"):
 
 
 def _predict_with_confidence(pipeline, messages):
-    """Return (preds, top_probs, probs_list) for given pipeline and list of messages."""
+    """
+    Predict labels and confidence scores for a list of messages using a trained pipeline.
+
+    Args:
+        pipeline: Trained sklearn pipeline with predict and predict_proba methods.
+        messages (list): List of text messages to classify.
+
+    Returns:
+        tuple: (predictions, top_probabilities, probabilities_list)
+            - predictions: List of predicted labels
+            - top_probabilities: List of highest probability for each prediction
+            - probabilities_list: List of dicts with class probabilities
+    """
     import numpy as _np
     preds = []
     tops = []
@@ -359,7 +402,15 @@ def _predict_with_confidence(pipeline, messages):
 
 
 def list_saved_model_paths(pattern='lead_*.pkl'):
-    """Return list of saved model pickle paths matching pattern in current folder."""
+    """
+    Find and return paths to saved model pickle files matching the given pattern.
+
+    Args:
+        pattern (str): Glob pattern to match model files (default: 'lead_*.pkl').
+
+    Returns:
+        list: List of file paths matching the pattern.
+    """
     import glob as _glob
     return _glob.glob(pattern)
 
