@@ -5,3 +5,5 @@ scikit-learn
 nltk
 python-dateutil
 joblib
+google-auth
+google-api-python-client

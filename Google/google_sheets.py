@@ -2,6 +2,17 @@ import os
 import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import os
+import json
+
+# Lazy-import Google libraries so module can be imported even when they are
+# not available (e.g., on Streamlit Community Cloud when not needed).
+GOOGLE_LIBS_AVAILABLE = True
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+except Exception:
+    GOOGLE_LIBS_AVAILABLE = False
 
 # Scopes for Google Sheets API
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -9,28 +20,35 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 # Path to credentials file
 SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), 'credentials.json')
 
-# Load credentials info
-with open(SERVICE_ACCOUNT_FILE, 'r') as f:
-    creds_info = json.load(f)
-SERVICE_ACCOUNT_EMAIL = creds_info['client_email']
-PROJECT_ID = creds_info['project_id']
+# Initialize defaults
+SERVICE_ACCOUNT_EMAIL = None
+PROJECT_ID = None
+service = None
 
-# Spreadsheet ID from the provided link
-SPREADSHEET_ID = '1IMDjdviTB43-sJrIM4x4TpSyaAR6KnIOCi9MVlgaf4U'
-
-print(f"Using service account: {SERVICE_ACCOUNT_EMAIL} from project: {PROJECT_ID}")
-
-# Authenticate and build the service
-try:
-    creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    service = build('sheets', 'v4', credentials=creds)
-    print("Google Sheets service initialized successfully")
-except Exception as e:
-    print(f"Failed to initialize Google Sheets service: {e}")
-    service = None
+# Attempt to load credentials and build service only if google libs are present
+if GOOGLE_LIBS_AVAILABLE:
+    try:
+        if os.path.exists(SERVICE_ACCOUNT_FILE):
+            with open(SERVICE_ACCOUNT_FILE, 'r') as f:
+                creds_info = json.load(f)
+            SERVICE_ACCOUNT_EMAIL = creds_info.get('client_email')
+            PROJECT_ID = creds_info.get('project_id')
+            try:
+                creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+                service = build('sheets', 'v4', credentials=creds)
+                print(f"Google Sheets service initialized for {SERVICE_ACCOUNT_EMAIL}")
+            except Exception as e:
+                print(f"Failed to initialize Google Sheets service: {e}")
+                service = None
+        else:
+            print(f"Google credentials file not found at {SERVICE_ACCOUNT_FILE}; Google Sheets disabled")
+    except Exception as e:
+        print(f"Error reading Google credentials: {e}")
+        service = None
+else:
+    print("Google API libraries not available; Google Sheets integration disabled")
 
 def append_entry_to_sheet(name, company, job_title, source, message, label):
-    """
     Appends a new entry (name, company, job_title, source, message, label) to the Google Sheet.
     This function can be called whenever a new entry is saved to the training data.
     """
