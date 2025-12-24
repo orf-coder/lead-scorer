@@ -1,0 +1,17 @@
+Project Report: Lead Scorer
+
+What the project does:
+This project is a lead scoring system for sales or marketing. It takes information about potential customers (leads) like their name, company, job title, source, and message, and scores them as "Hot" (high priority), "Warm" (medium), or "Cold" (low). It uses two main ways to score: rules based on keywords and machine learning models.
+
+How it works:
+1. Rule-based scoring: It checks the message for words showing interest (relevance: +10 points each for "demo", "pricing", "quote"), intent to buy (+10 for "buy", "urgent"), and potential value (job titles like CEO/CTO +25, VP +20, Director +15, Manager +10; companies like Google/Microsoft +10, Netflix/Tesla +8; source like email +5, linkedin +3; message length over 50 words +5; negatives like student -10, freelance -5). It adds up points: over 30 is Hot, over 0 is Warm, 0 or less is Cold. Confidence is calculated as 1 / (1 + exp(-score * 0.03)), a sigmoid formula that maps the score to a probability-like value between 0% and 100%, where higher scores give higher confidence.
+
+2. Machine learning: It turns text into numbers using TF-IDF, which gives higher scores to words that are common in the message but rare in the whole dataset, helping focus on unique important words. It uses up to 200 features, includes single words and word pairs, and removes common English words. TF-IDF only uses the message text, not the rule-based score. Trains three models (Logistic Regression, SVM, Naive Bayes) on past labeled data from CSV files. Each model predicts Hot/Warm/Cold with confidence levels for each category.
+
+3. Comparison: It compares the rule-based confidence with each ML model's top confidence. Shows a table with model names, predictions, top confidence, and probabilities. Then compares each model vs rule, showing who wins and by how much.
+
+4. Web app: Streamlit interface with a form for single lead input (name, company, etc.), file upload for .txt files (extracts info), or CSV for batch (columns: Name, Company, Job_Title, Source, Message). Displays rule score, ML table, comparison, consensus prediction. For batch, shows table of results, histogram chart of confidences, export as CSV. Saves leads to training data. Has themes, tooltips, logs errors and usage.
+
+5. Training and evaluation: Models trained on Data/csvfile.csv (over 200 samples). Scripts: run_train_all.py saves model files; dv.py makes bar charts of data distributions; evaluate_saved_models gives reports on accuracy, etc. Auto-retrain (auto_retrain.py) checks if data grew by 50+ samples, retrains all models.
+
+The system helps prioritize leads by combining simple rules with smart AI predictions.

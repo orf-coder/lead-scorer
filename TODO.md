@@ -1,0 +1,3 @@
+- [x] Remove unused import: from sklearn.model_selection import train_test_split
+- [x] In train method, remove duplicate prints for test metrics and cross-validation scores
+- [x] In main block, remove the evaluation code that uses train_test_split on the training CSV
